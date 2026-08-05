@@ -30,14 +30,10 @@ class AuthController extends Controller
         }
 
         $mobileNumber = $request->input('mobile_number');
-
-        // Generate a random 4-digit OTP
         $otp = rand(1000, 9999);
 
-        // Store the OTP in cache for 5 minutes
         Cache::put('otp_' . $mobileNumber, $otp, now()->addMinutes(5));
 
-        // Call Pearl SMS Gateway
         $apiUrl = env('PEARL_SMS_API_URL');
         $apiKey = env('PEARL_SMS_API_KEY');
         $senderId = env('PEARL_SMS_SENDER_ID');
@@ -55,9 +51,12 @@ class AuthController extends Controller
         ];
 
         if (!empty($templateId)) {
-            $payload['templateid'] = $templateId; // Some gateways use 'templateid' or 'tid'
+
+            $payload['templateid'] = $templateId;
         }
-        if (!empty($peId)) {
+
+
+              if (!empty($peId)) {
             $payload['peid'] = $peId;
         }
 

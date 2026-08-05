@@ -23,7 +23,40 @@ class User extends Authenticatable
         'image',
         'dob',
         'gender',
+        'referral_code',
+        'referred_by',
+        'coins',
+        'total_referrals',
+        'total_referral_coins',
     ];
+
+    /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($user) {
+            if (empty($user->referral_code)) {
+                $user->referral_code = static::generateUniqueReferralCode();
+            }
+        });
+    }
+
+    /**
+     * Generate a unique referral code.
+     */
+    public static function generateUniqueReferralCode()
+    {
+        do {
+            $letters = chr(mt_rand(65, 90)) . chr(mt_rand(65, 90)) . chr(mt_rand(65, 90));
+            $numbers = mt_rand(10000, 99999);
+            $code = $letters . $numbers;
+        } while (static::where('referral_code', $code)->exists());
+
+        return $code;
+    }
 
     /**
      * The attributes that should be hidden for serialization.
