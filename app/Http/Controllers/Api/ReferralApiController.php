@@ -20,7 +20,6 @@ class ReferralApiController extends Controller
     {
         $user = $request->user();
 
-        // Use default values if setting not found
         $settings = ReferralSetting::first() ?? new ReferralSetting([
             'title' => '',
             'description' => '',
@@ -70,9 +69,7 @@ class ReferralApiController extends Controller
         ], 200);
     }
 
-    /**
-     * API 2: Return complete referral history (Paginated).
-     */
+
     public function getHistory(Request $request)
     {
         $user = $request->user();
@@ -94,7 +91,6 @@ class ReferralApiController extends Controller
             ];
         });
 
-        // Maintain the standard pagination structure but replace data with mapped format
         $paginatedResponse = $referrals->toArray();
         $paginatedResponse['data'] = $mappedHistory;
 
@@ -105,15 +101,13 @@ class ReferralApiController extends Controller
         ], 200);
     }
 
-    /**
-     * API 3: Apply referral code while registering.
-     */
+
     public function applyReferral(Request $request)
     {
         $user = $request->user();
 
         $validator = Validator::make($request->all(), [
-            'referral_code' => 'required|string|exists:users,referral_code',
+            'referral_code' => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -126,7 +120,6 @@ class ReferralApiController extends Controller
 
         $referralCode = $request->input('referral_code');
 
-        // Check if user is trying to apply their own code
         if ($user->referral_code === $referralCode) {
             return response()->json([
                 'status' => false,
@@ -134,7 +127,6 @@ class ReferralApiController extends Controller
             ], 400);
         }
 
-        // Check if user has already applied a code
         if ($user->referred_by !== null) {
             return response()->json([
                 'status' => false,
@@ -157,7 +149,7 @@ class ReferralApiController extends Controller
         try {
             DB::beginTransaction();
 
-            // 1. Update New User
+
             $user->referred_by = $referrer->id;
 
             if ($newUserBonus > 0) {
@@ -171,7 +163,7 @@ class ReferralApiController extends Controller
             }
             $user->save();
 
-            // 2. Create Referral Record
+
             Referral::create([
                 'referrer_id' => $referrer->id,
                 'referred_user_id' => $user->id,
@@ -182,7 +174,7 @@ class ReferralApiController extends Controller
                 'rewarded_at' => now(),
             ]);
 
-            // 3. Reward Referrer
+
             if ($rewardAmount > 0) {
                 $referrer->coins += $rewardAmount;
                 $referrer->total_referrals += 1;
