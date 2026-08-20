@@ -23,11 +23,13 @@ class User extends Authenticatable
         'image',
         'dob',
         'gender',
+        'password',
         'referral_code',
         'referred_by',
         'coins',
         'total_referrals',
         'total_referral_coins',
+        'u_id',
     ];
 
     /**
@@ -40,6 +42,9 @@ class User extends Authenticatable
         static::creating(function ($user) {
             if (empty($user->referral_code)) {
                 $user->referral_code = static::generateUniqueReferralCode();
+            }
+            if (empty($user->u_id)) {
+                $user->u_id = static::generateUniqueUId();
             }
         });
     }
@@ -59,12 +64,28 @@ class User extends Authenticatable
     }
 
     /**
+     * Generate a unique serial-wise user ID.
+     */
+    public static function generateUniqueUId()
+    {
+        $lastUser = static::orderBy('id', 'desc')->first();
+        if ($lastUser && $lastUser->u_id) {
+            $lastNumber = (int) substr($lastUser->u_id, 2);
+            $nextNumber = $lastNumber + 1;
+        } else {
+            $nextNumber = 10001;
+        }
+
+        return 'QB' . $nextNumber;
+    }
+
+    /**
      * The attributes that should be hidden for serialization.
      *
      * @var array<int, string>
      */
     protected $hidden = [
-        // No password to hide
+        'password',
     ];
 
     /**

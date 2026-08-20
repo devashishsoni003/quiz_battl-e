@@ -13,9 +13,7 @@ use Illuminate\Support\Facades\Validator;
 
 class ReferralApiController extends Controller
 {
-    /**
-     * API 1: Return complete referral screen data.
-     */
+
     public function getReferralData(Request $request)
     {
         $user = $request->user();
@@ -143,12 +141,10 @@ class ReferralApiController extends Controller
         }
 
         $settings = ReferralSetting::first();
-        $rewardAmount = $settings ? $settings->reward_per_referral : 0;
         $newUserBonus = $settings ? $settings->new_user_bonus : 0;
 
         try {
             DB::beginTransaction();
-
 
             $user->referred_by = $referrer->id;
 
@@ -163,34 +159,18 @@ class ReferralApiController extends Controller
             }
             $user->save();
 
-
             Referral::create([
                 'referrer_id' => $referrer->id,
                 'referred_user_id' => $user->id,
                 'referral_code' => $referralCode,
-                'reward_amount' => $rewardAmount,
-                'status' => 'Completed',
+                'reward_amount' => 0,
+                'status' => 'Pending',
                 'joined_at' => now(),
-                'rewarded_at' => now(),
+                'rewarded_at' => null,
             ]);
 
-
-            if ($rewardAmount > 0) {
-                $referrer->coins += $rewardAmount;
-                $referrer->total_referrals += 1;
-                $referrer->total_referral_coins += $rewardAmount;
-                $referrer->save();
-
-                WalletTransaction::create([
-                    'user_id' => $referrer->id,
-                    'amount' => $rewardAmount,
-                    'type' => 'credit',
-                    'description' => 'Referral Bonus for inviting ' . $user->name,
-                ]);
-            } else {
-                $referrer->total_referrals += 1;
-                $referrer->save();
-            }
+            $referrer->total_referrals += 1;
+            $referrer->save();
 
             DB::commit();
 

@@ -58,10 +58,10 @@
                     </div>
 
                     <div class="form-row-2">
-                        <!-- Reward Per Referral -->
+                        <!-- Reward Per Referral Percentage -->
                         <div class="form-group-custom" style="margin-bottom: 1.5rem;">
-                            <label class="form-label" for="reward_per_referral">Reward Per Referral (Coins)<span class="req">*</span></label>
-                            <input type="number" name="reward_per_referral" id="reward_per_referral" class="form-input" value="{{ old('reward_per_referral', $settings->reward_per_referral) }}" required min="0">
+                            <label class="form-label" for="reward_per_referral">Referral Reward (%)<span class="req">*</span></label>
+                            <input type="number" step="any" name="reward_per_referral" id="reward_per_referral" class="form-input" value="{{ old('reward_per_referral', $settings->reward_per_referral) }}" required min="0" max="100">
                             @error('reward_per_referral')
                                 <div class="validation-error-message">{{ $message }}</div>
                             @enderror
@@ -124,8 +124,17 @@
                             </div>
                             
                             <div class="avatar-placeholder" id="avatar-placeholder-text" style="{{ $hasImage ? 'display: none;' : '' }}">
-                                <span class="upload-icon">📁</span>
-                                <span>Click to upload image</span>
+                                <div class="dropzone-cloud-icon">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M16 16l-4-4-4 4M12 12v9"></path>
+                                        <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path>
+                                        <polyline points="16 16 12 12 8 16"></polyline>
+                                    </svg>
+                                </div>
+                                <div class="dropzone-main-text">
+                                    Drag & drop files here or <span class="browse-link">browse</span>
+                                </div>
+                                <div class="dropzone-sub-text">Accepted file types: image/*</div>
                             </div>
                         </div>
                     </div>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
@@ -43,7 +44,6 @@ class UserController extends Controller
             ], 422);
         }
 
-        // Update fields if provided
         if ($request->has('username')) {
             $user->username = $request->input('username');
         }
@@ -56,17 +56,14 @@ class UserController extends Controller
             $user->gender = $request->input('gender');
         }
 
-        // Handle profile image upload
         if ($request->hasFile('image')) {
             $imageFile = $request->file('image');
-            
-            // Define upload path
+
             $uploadPath = public_path('uploads/profiles');
             if (!file_exists($uploadPath)) {
                 mkdir($uploadPath, 0777, true);
             }
 
-            // Delete old image if it exists
             if ($user->image) {
                 $oldImagePath = public_path($user->image);
                 if (file_exists($oldImagePath)) {
@@ -74,13 +71,10 @@ class UserController extends Controller
                 }
             }
 
-            // Create unique filename
             $filename = time() . '_' . uniqid() . '.' . $imageFile->getClientOriginalExtension();
             
-            // Move uploaded file to destination
             $imageFile->move($uploadPath, $filename);
             
-            // Save path in database
             $user->image = 'uploads/profiles/' . $filename;
         }
 
@@ -93,14 +87,68 @@ class UserController extends Controller
         ], 200);
     }
 
-    /**
-     * Get the authenticated user's profile details.
-     */
+ 
     public function getProfile(Request $request)
     {
         return response()->json([
             'status' => 'success',
             'user' => $request->user()
+        ], 200);
+    }
+
+
+    public function changePassword(Request $request)
+    {
+        $user = $request->user();
+
+        // Support parameter aliases (old_password / current_password, confirm_password / new_password_confirmation)
+        if ($request->has('old_password') && !$request->has('current_password')) {
+            $request->merge(['current_password' => $request->input('old_password')]);
+        }
+        if ($request->has('confirm_password') && !$request->has('new_password_confirmation')) {
+            $request->merge(['new_password_confirmation' => $request->input('confirm_password')]);
+        }
+        if ($request->has('new_password_confirmation') && !$request->has('confirm_password')) {
+            $request->merge(['confirm_password' => $request->input('new_password_confirmation')]);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:6|different:current_password',
+            'confirm_password' => 'required|string|same:new_password',
+        ], [
+            'new_password.different' => 'New password must be different from current password.',
+            'confirm_password.same' => 'Confirm password must match the new password.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validation error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Verify current password if user already has a password set
+        if (!empty($user->password)) {
+            if (!Hash::check($request->input('current_password'), $user->password)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Current password does not match.',
+                    'errors' => [
+                        'current_password' => ['Current password does not match.']
+                    ]
+                ], 422);
+            }
+        }
+
+        // Update password with hashed value
+        $user->password = Hash::make($request->input('new_password'));
+        $user->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Password changed successfully'
         ], 200);
     }
 }

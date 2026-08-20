@@ -38,7 +38,7 @@ class ReferralSettingController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'reward_per_referral' => 'required|numeric|min:0',
+            'reward_per_referral' => 'required|numeric|min:0|max:100',
             'new_user_bonus' => 'required|numeric|min:0',
             'share_title' => 'nullable|string|max:255',
             'share_message' => 'nullable|string',

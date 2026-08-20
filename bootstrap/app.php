@@ -16,12 +16,20 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->prefix('admin')
                 ->name('admin.')
                 ->group(base_path('routes/admin.php'));
+
+            Route::middleware('web')
+                ->prefix('seller')
+                ->name('seller.')
+                ->group(base_path('routes/seller.php'));
         }
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->redirectGuestsTo(function ($request) {
             if ($request->is('admin') || $request->is('admin/*')) {
                 return route('admin.login');
+            }
+            if ($request->is('seller') || $request->is('seller/*')) {
+                return route('seller.login');
             }
             return route('login');
         });

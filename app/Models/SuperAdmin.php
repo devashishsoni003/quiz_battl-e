@@ -26,6 +26,7 @@ class SuperAdmin extends Authenticatable
         'email',
         'password',
         'contact_number',
+        'whatsapp_number',
     ];
 
     /**

@@ -21,6 +21,10 @@ Route::middleware('auth:super_admin')->group(function () {
     Route::post('/profile/update', [DashboardController::class, 'updateProfile'])->name('profile.update');
     Route::post('/profile/change-password', [DashboardController::class, 'changePassword'])->name('profile.change_password');
 
+    // Settings
+    Route::get('/settings', [DashboardController::class, 'settings'])->name('settings.index');
+    Route::post('/settings', [DashboardController::class, 'saveSettings'])->name('settings.update');
+
     // Home Management
     // Home Sliders
     Route::resource('home-sliders', \App\Http\Controllers\Admin\HomeSliderController::class)->except(['show']);
@@ -64,4 +68,12 @@ Route::middleware('auth:super_admin')->group(function () {
     Route::get('withdrawal-requests', [\App\Http\Controllers\Admin\WithdrawalRequestController::class, 'index'])->name('withdrawal-requests.index');
     Route::post('withdrawal-requests/{id}/approve', [\App\Http\Controllers\Admin\WithdrawalRequestController::class, 'approve'])->name('withdrawal-requests.approve');
     Route::post('withdrawal-requests/{id}/reject', [\App\Http\Controllers\Admin\WithdrawalRequestController::class, 'reject'])->name('withdrawal-requests.reject');
+
+    // Seller Management
+    Route::resource('sellers', \App\Http\Controllers\Admin\SellerController::class)->except(['show']);
+    Route::post('sellers/{seller}/toggle-status', [\App\Http\Controllers\Admin\SellerController::class, 'toggleStatus'])->name('sellers.toggle-status');
+
+    // FAQ Management
+    Route::resource('faqs', \App\Http\Controllers\Admin\FaqController::class)->except(['show']);
+    Route::post('faqs/{faq}/toggle-status', [\App\Http\Controllers\Admin\FaqController::class, 'toggleStatus'])->name('faqs.toggle-status');
 });

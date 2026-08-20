@@ -34,12 +34,32 @@ class DashboardController extends Controller
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'email' => 'required|email|unique:super_admins,email,' . $user->id,
-            'contact_number' => 'required|string|max:20',
-            'gender' => 'required|string|in:male,female,other',
+            'contact_number' => 'nullable|string|max:20',
+            'whatsapp_number' => 'nullable|string|max:20',
+            'gender' => 'nullable|string|in:male,female,other',
             'image' => 'nullable|image|max:2048', // max 2MB
         ]);
 
-        $data = $request->only(['first_name', 'last_name', 'email', 'contact_number', 'gender']);
+        $data = [
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'email' => $request->email,
+            'contact_number' => $request->contact_number,
+            'whatsapp_number' => $request->whatsapp_number,
+        ];
+
+        if ($request->filled('gender')) {
+            $data['gender'] = $request->gender;
+        }
+
+        // Handle image removal if requested
+        if ($request->input('remove_image') == '1') {
+            $destPath = public_path('uploads/admins');
+            if ($user->image && file_exists($destPath . '/' . $user->image)) {
+                @unlink($destPath . '/' . $user->image);
+            }
+            $data['image'] = null;
+        }
 
         if ($request->hasFile('image')) {
             // Ensure destination directory exists
@@ -62,7 +82,7 @@ class DashboardController extends Controller
         $user->update($data);
 
         $request->session()->flash('toast_success', 'Profile updated successfully');
-        return redirect()->back()->with('active_tab', 'personal');
+        return redirect()->back();
     }
 
     /**
@@ -93,5 +113,22 @@ class DashboardController extends Controller
 
         $request->session()->flash('toast_success', 'Password changed successfully');
         return redirect()->back()->with('active_tab', 'password');
+    }
+
+    /**
+     * Show Settings Page.
+     */
+    public function settings()
+    {
+        return view('admin.pages.settings');
+    }
+
+    /**
+     * Save Settings Page.
+     */
+    public function saveSettings(Request $request)
+    {
+        $request->session()->flash('toast_success', 'Settings updated successfully');
+        return redirect()->back();
     }
 }
